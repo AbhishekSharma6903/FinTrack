@@ -1,0 +1,24 @@
+meta {
+  name: Test 1
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:8000/chat
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+      "message": "I just spent 450 rupees on lunch at a restaurant, paid by UPI",
+      "user_id": "abhishek_001",
+      "api_key": "YOUR_CLAUDE_API_KEY_HERE",
+      "history": []
+    }
+}
