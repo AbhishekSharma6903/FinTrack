@@ -1,0 +1,29 @@
+meta {
+  name: 33 - Chat - Goals Overview
+  type: http
+  seq: 43
+}
+
+post {
+  url: http://localhost:8000/chat
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "user_id": "u_demo",
+    "message": "show me all my goals and how I'm doing on them",
+    "history": []
+  }
+}
+
+docs {
+  Exercises: goals-server -> get_goals (+ possibly get_habit_status) showing the
+  savings goal (step 24) and habit goal (step 25) with progress.
+  Expect tools_used to include "get_goals".
+}

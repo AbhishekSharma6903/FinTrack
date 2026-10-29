@@ -1,0 +1,29 @@
+meta {
+  name: 57 - MCP - Insights net_worth (direct)
+  type: http
+  seq: 57
+}
+
+post {
+  url: http://localhost:8004/mcp/execute
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "tool": "get_net_worth",
+    "args": {
+      "user_id": "u_direct"
+    }
+  }
+}
+
+docs {
+  Direct MCP call to insights-server. Cross-server read: holdings + transactions.
+  Run after 50/53 so there is data. Expect assets vs liabilities and net worth.
+}

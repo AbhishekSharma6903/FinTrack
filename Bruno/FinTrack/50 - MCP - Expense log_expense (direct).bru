@@ -1,0 +1,34 @@
+meta {
+  name: 50 - MCP - Expense log_expense (direct)
+  type: http
+  seq: 50
+}
+
+post {
+  url: http://localhost:8001/mcp/execute
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "tool": "log_expense",
+    "args": {
+      "user_id": "u_direct",
+      "amount": 250,
+      "category": "food",
+      "description": "zomato lunch",
+      "merchant": "Zomato",
+      "payment_method": "upi"
+    }
+  }
+}
+
+docs {
+  Direct MCP call — bypasses the LLM entirely. Deterministic fallback for demo.
+  Expect: success true, a transaction_id, and a monthly_context block.
+}

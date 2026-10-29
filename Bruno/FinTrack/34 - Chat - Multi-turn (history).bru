@@ -1,0 +1,33 @@
+meta {
+  name: 34 - Chat - Multi-turn (history)
+  type: http
+  seq: 44
+}
+
+post {
+  url: http://localhost:8000/chat
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "user_id": "u_demo",
+    "message": "and how much did I spend on food specifically?",
+    "history": [
+      { "role": "user", "content": "how am I doing this month?" },
+      { "role": "assistant", "content": "This month you earned 60000 and have some expenses logged; your biggest category is food." }
+    ]
+  }
+}
+
+docs {
+  Demonstrates multi-turn memory: the "history" array is prior conversation.
+  The follow-up "and how much did I spend on food specifically?" only makes sense
+  with context. Expect the model to call get_expenses / get_monthly_summary
+  and answer the food follow-up coherently.
+}

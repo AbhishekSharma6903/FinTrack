@@ -21,8 +21,6 @@ venv/
 # Docker
 *.log
 
-# Bruno collections that may contain secrets
+# Bruno — only ignore local-only env files, keep the collection itself
 Bruno/**/environments/
-
-# Ignore the entire BRUNO folder
-Bruno/
+*.bruno.json

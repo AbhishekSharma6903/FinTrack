@@ -1,0 +1,17 @@
+meta {
+  name: 04 - Tools - Insights
+  type: http
+  seq: 14
+}
+
+get {
+  url: http://localhost:8004/mcp/tools
+  body: none
+  auth: inherit
+}
+
+docs {
+  MCP tool-discovery on insights-server (read-only analytics; owns no tables).
+  Expect 5 tools: get_spending_trends, detect_anomalies, get_month_forecast,
+  get_net_worth, get_financial_health_score.
+}

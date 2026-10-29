@@ -26,14 +26,17 @@ async def _get_category_spend_this_month(user_id: str, category: str, db: AsyncS
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
     # Raw SQL is fine here — we're reading a table we don't own, so no ORM model for it.
+    # ::text casts are required because 'category' and 'type' are PostgreSQL native enums.
+    # Comparing an enum column against a plain string bind parameter silently returns no
+    # rows without the cast — the types don't match at the DB level.
     result = await db.execute(
         text("""
             SELECT COALESCE(SUM(amount), 0)
             FROM transactions
-            WHERE user_id    = :user_id
-              AND category   = :category
-              AND type       = 'expense'
-              AND transaction_at >= :month_start
+            WHERE user_id          = :user_id
+              AND category::text   = :category
+              AND type::text       = 'expense'
+              AND transaction_at  >= :month_start
         """),
         {"user_id": user_id, "category": category, "month_start": month_start}
     )
@@ -370,12 +373,13 @@ async def get_budget_recommendations(user_id: str, db: AsyncSession) -> dict:
     since = datetime.utcnow() - timedelta(days=30)
 
     # Actual spend per category in last 30 days (from expense-server's table)
+    # category::text returns the enum value as a plain string so Python can use it as a dict key
     spend_result = await db.execute(
         text("""
-            SELECT category, SUM(amount) as total
+            SELECT category::text, SUM(amount) as total
             FROM transactions
-            WHERE user_id = :user_id
-              AND type = 'expense'
+            WHERE user_id         = :user_id
+              AND type::text      = 'expense'
               AND transaction_at >= :since
             GROUP BY category
         """),

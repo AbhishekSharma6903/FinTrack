@@ -60,6 +60,54 @@ services:
       - ./mcp-servers/budget-server:/app
     command: uvicorn main:app --host 0.0.0.0 --port 8002 --reload
 
+  invest-server:
+    build:
+      context: ./mcp-servers/invest-server
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+    ports:
+      - "8003:8003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./mcp-servers/invest-server:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8003 --reload
+
+  insights-server:
+    build:
+      context: ./mcp-servers/insights-server
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+    ports:
+      - "8004:8004"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./mcp-servers/insights-server:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8004 --reload
+
+  goals-server:
+    build:
+      context: ./mcp-servers/goals-server
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+    ports:
+      - "8005:8005"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./mcp-servers/goals-server:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8005 --reload
+
   ai-gateway:
     build:
       context: ./ai-gateway
@@ -68,13 +116,17 @@ services:
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL}
       SECRET_KEY: ${SECRET_KEY}
-      EXPENSE_SERVER_URL: http://expense-server:8001
-      BUDGET_SERVER_URL: http://budget-server:8002
+      AI_BASE_URL: ${AI_BASE_URL}
+      AI_API_KEY: ${AI_API_KEY}
+      AI_MODEL: ${AI_MODEL}
     ports:
       - "8000:8000"
     depends_on:
       - expense-server
-      - budget-server   # wait for budget-server before starting the gateway
+      - budget-server
+      - invest-server
+      - insights-server
+      - goals-server
     volumes:
       - ./ai-gateway:/app
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload

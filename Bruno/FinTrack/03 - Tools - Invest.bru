@@ -1,0 +1,17 @@
+meta {
+  name: 03 - Tools - Invest
+  type: http
+  seq: 13
+}
+
+get {
+  url: http://localhost:8003/mcp/tools
+  body: none
+  auth: inherit
+}
+
+docs {
+  MCP tool-discovery on invest-server.
+  Expect 6 tools: add_holding, get_portfolio, get_live_price, log_sip,
+  get_sip_summary, get_asset_allocation.
+}

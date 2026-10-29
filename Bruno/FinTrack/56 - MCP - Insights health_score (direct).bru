@@ -1,0 +1,29 @@
+meta {
+  name: 56 - MCP - Insights health_score (direct)
+  type: http
+  seq: 56
+}
+
+post {
+  url: http://localhost:8004/mcp/execute
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "tool": "get_financial_health_score",
+    "args": {
+      "user_id": "u_direct"
+    }
+  }
+}
+
+docs {
+  Direct MCP call to insights-server (read-only). Aggregates across
+  transactions/budgets/holdings. Expect a 0-100 score with component breakdown.
+}

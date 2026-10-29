@@ -1,0 +1,29 @@
+meta {
+  name: 23 - Chat - Over-Budget Expense
+  type: http
+  seq: 33
+}
+
+post {
+  url: http://localhost:8000/chat
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "user_id": "u_demo",
+    "message": "spent another 4800 on food ordering dinner for a party",
+    "history": []
+  }
+}
+
+docs {
+  Now food spend (250 + 4800 = 5050) exceeds the 5000 budget set in step 22.
+  Expect: log_expense + check_budget_on_expense, with alert_level "exceeded"
+  (or "danger"), and the reply should warn about going over budget.
+}

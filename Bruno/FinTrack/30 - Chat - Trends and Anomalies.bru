@@ -1,0 +1,29 @@
+meta {
+  name: 30 - Chat - Spending Trends & Anomalies
+  type: http
+  seq: 40
+}
+
+post {
+  url: http://localhost:8000/chat
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "user_id": "u_demo",
+    "message": "am I spending more than usual? anything unusual this month?",
+    "history": []
+  }
+}
+
+docs {
+  Exercises: insights-server -> get_spending_trends and/or detect_anomalies
+  (read-only server querying transactions).
+  Expect tools_used to include get_spending_trends or detect_anomalies.
+}

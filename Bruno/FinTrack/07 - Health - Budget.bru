@@ -1,0 +1,15 @@
+meta {
+  name: 07 - Health - Budget
+  type: http
+  seq: 17
+}
+
+get {
+  url: http://localhost:8002/health
+  body: none
+  auth: inherit
+}
+
+docs {
+  Expect: {"status": "ok", "server": "budget-server"}
+}

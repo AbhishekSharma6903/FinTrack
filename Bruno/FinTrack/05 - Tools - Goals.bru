@@ -1,0 +1,17 @@
+meta {
+  name: 05 - Tools - Goals
+  type: http
+  seq: 15
+}
+
+get {
+  url: http://localhost:8005/mcp/tools
+  body: none
+  auth: inherit
+}
+
+docs {
+  MCP tool-discovery on goals-server.
+  Expect 7 tools: create_goal, get_goals, add_goal_contribution, get_goal_detail,
+  update_goal, complete_goal, get_habit_status.
+}

@@ -1,0 +1,30 @@
+meta {
+  name: 54 - MCP - Invest get_live_price (direct)
+  type: http
+  seq: 54
+}
+
+post {
+  url: http://localhost:8003/mcp/execute
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "tool": "get_live_price",
+    "args": {
+      "symbol": "RELIANCE.NS"
+    }
+  }
+}
+
+docs {
+  Direct MCP call — pure external API (Yahoo Finance via yfinance), no DB/user_id.
+  Expect a live price for RELIANCE.NS. If the container has no internet or Yahoo
+  rate-limits, price may be null — that's the honest external-dependency caveat.
+}

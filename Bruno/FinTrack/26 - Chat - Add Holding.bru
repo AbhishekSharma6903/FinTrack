@@ -1,0 +1,28 @@
+meta {
+  name: 26 - Chat - Add Holding
+  type: http
+  seq: 36
+}
+
+post {
+  url: http://localhost:8000/chat
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "user_id": "u_demo",
+    "message": "I bought 10 shares of Reliance at 2900",
+    "history": []
+  }
+}
+
+docs {
+  Exercises: invest-server -> add_holding (symbol RELIANCE.NS, weighted avg cost basis).
+  Expect tools_used to include "add_holding".
+}

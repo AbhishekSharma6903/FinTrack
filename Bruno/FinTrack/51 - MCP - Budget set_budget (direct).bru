@@ -1,0 +1,32 @@
+meta {
+  name: 51 - MCP - Budget set_budget (direct)
+  type: http
+  seq: 51
+}
+
+post {
+  url: http://localhost:8002/mcp/execute
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "tool": "set_budget",
+    "args": {
+      "user_id": "u_direct",
+      "category": "food",
+      "monthly_limit": 5000,
+      "alert_threshold_pct": 80
+    }
+  }
+}
+
+docs {
+  Direct MCP call to budget-server. Uses PostgreSQL upsert.
+  Expect: success true and a budget object echoing the limit.
+}

@@ -1,0 +1,34 @@
+meta {
+  name: 53 - MCP - Invest add_holding (direct)
+  type: http
+  seq: 53
+}
+
+post {
+  url: http://localhost:8003/mcp/execute
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "tool": "add_holding",
+    "args": {
+      "user_id": "u_direct",
+      "symbol": "RELIANCE.NS",
+      "name": "Reliance Industries",
+      "asset_type": "stock",
+      "quantity": 10,
+      "avg_buy_price": 2900
+    }
+  }
+}
+
+docs {
+  Direct MCP call to invest-server. Expect: success true, action created/updated,
+  holding with total_invested.
+}

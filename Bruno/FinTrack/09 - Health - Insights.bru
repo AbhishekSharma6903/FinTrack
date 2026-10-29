@@ -1,0 +1,15 @@
+meta {
+  name: 09 - Health - Insights
+  type: http
+  seq: 19
+}
+
+get {
+  url: http://localhost:8004/health
+  body: none
+  auth: inherit
+}
+
+docs {
+  Expect: {"status": "ok", "server": "insights-server"}
+}

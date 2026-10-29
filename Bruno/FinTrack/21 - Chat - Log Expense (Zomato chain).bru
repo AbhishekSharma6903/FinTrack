@@ -1,0 +1,29 @@
+meta {
+  name: 21 - Chat - Log Expense (Zomato chain)
+  type: http
+  seq: 31
+}
+
+post {
+  url: http://localhost:8000/chat
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "user_id": "u_demo",
+    "message": "spent 250 on zomato lunch",
+    "history": []
+  }
+}
+
+docs {
+  THE FLAGSHIP DEMO — one message, a cross-server chain.
+  Expect tools_used: [log_expense, check_budget_on_expense, get_habit_status]
+  (expense-server -> budget-server -> goals-server).
+}
