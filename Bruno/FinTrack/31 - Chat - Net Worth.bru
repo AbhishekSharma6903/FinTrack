@@ -1,0 +1,28 @@
+meta {
+  name: 31 - Chat - Net Worth
+  type: http
+  seq: 41
+}
+
+post {
+  url: http://localhost:8000/chat
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "user_id": "u_demo",
+    "message": "what is my net worth right now?",
+    "history": []
+  }
+}
+
+docs {
+  Exercises: insights-server -> get_net_worth (cross-server read: holdings +
+  transactions). Expect tools_used to include "get_net_worth".
+}

@@ -1,0 +1,26 @@
+# Environment / secrets
+.env
+*.env
+.env.local
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.pytest_cache/
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Docker
+*.log
+
+# Bruno — only ignore local-only env files, keep the collection itself
+Bruno/**/environments/
+*.bruno.json

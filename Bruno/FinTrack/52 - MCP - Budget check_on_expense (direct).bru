@@ -1,0 +1,31 @@
+meta {
+  name: 52 - MCP - Budget check_on_expense (direct)
+  type: http
+  seq: 52
+}
+
+post {
+  url: http://localhost:8002/mcp/execute
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "tool": "check_budget_on_expense",
+    "args": {
+      "user_id": "u_direct",
+      "category": "food"
+    }
+  }
+}
+
+docs {
+  Direct MCP call — reads the shared transactions table to compute % of budget used.
+  Run this AFTER 50 + 51. Expect an alert_level (ok/warning/danger/exceeded)
+  and remaining amount.
+}

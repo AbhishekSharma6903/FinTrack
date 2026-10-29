@@ -1,0 +1,29 @@
+meta {
+  name: 29 - Chat - Monthly Summary
+  type: http
+  seq: 39
+}
+
+post {
+  url: http://localhost:8000/chat
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "user_id": "u_demo",
+    "message": "how am I doing this month?",
+    "history": []
+  }
+}
+
+docs {
+  Exercises: expense-server -> get_monthly_summary (income, spend by category,
+  savings rate, top category).
+  Expect tools_used to include "get_monthly_summary".
+}

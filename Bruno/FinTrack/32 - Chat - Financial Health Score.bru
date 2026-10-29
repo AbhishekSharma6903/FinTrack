@@ -1,0 +1,29 @@
+meta {
+  name: 32 - Chat - Financial Health Score
+  type: http
+  seq: 42
+}
+
+post {
+  url: http://localhost:8000/chat
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "user_id": "u_demo",
+    "message": "give me a financial health check, rate my finances out of 100",
+    "history": []
+  }
+}
+
+docs {
+  Exercises: insights-server -> get_financial_health_score (0-100 based on
+  savings rate, budget adherence, diversification).
+  Expect tools_used to include "get_financial_health_score".
+}

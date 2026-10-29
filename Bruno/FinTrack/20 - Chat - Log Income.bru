@@ -1,0 +1,29 @@
+meta {
+  name: 20 - Chat - Log Income
+  type: http
+  seq: 30
+}
+
+post {
+  url: http://localhost:8000/chat
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "user_id": "u_demo",
+    "message": "got my salary of 60000 today",
+    "history": []
+  }
+}
+
+docs {
+  Exercises: expense-server -> log_income.
+  Expect tools_used to include "log_income". Sets up income so later
+  savings-rate / net-worth / health-score numbers are meaningful.
+}

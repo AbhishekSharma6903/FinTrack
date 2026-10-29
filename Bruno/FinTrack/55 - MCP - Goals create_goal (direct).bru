@@ -1,0 +1,33 @@
+meta {
+  name: 55 - MCP - Goals create_goal (direct)
+  type: http
+  seq: 55
+}
+
+post {
+  url: http://localhost:8005/mcp/execute
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "tool": "create_goal",
+    "args": {
+      "user_id": "u_direct",
+      "title": "MacBook Fund",
+      "goal_type": "savings",
+      "target_amount": 50000,
+      "deadline": "2025-12-31"
+    }
+  }
+}
+
+docs {
+  Direct MCP call to goals-server. Expect: success true and a goal object
+  (savings type). Copy the returned goal id if you want to test add_goal_contribution.
+}

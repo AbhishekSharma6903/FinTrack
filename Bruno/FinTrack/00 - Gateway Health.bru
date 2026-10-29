@@ -1,0 +1,17 @@
+meta {
+  name: 00 - Gateway Health
+  type: http
+  seq: 10
+}
+
+get {
+  url: http://localhost:8000/health
+  body: none
+  auth: inherit
+}
+
+docs {
+  Proves the gateway is up and has discovered all 5 MCP servers.
+  Expect: status "ok", tools_count 29, model "openai/gpt-oss-20b",
+  and a "tools" array listing every tool across all servers.
+}

@@ -1,0 +1,28 @@
+meta {
+  name: 27 - Chat - Log SIP
+  type: http
+  seq: 37
+}
+
+post {
+  url: http://localhost:8000/chat
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "user_id": "u_demo",
+    "message": "my monthly SIP of 5000 in Nifty BEES got processed today",
+    "history": []
+  }
+}
+
+docs {
+  Exercises: invest-server -> log_sip (symbol NIFTYBEES.NS, amount 5000).
+  Expect tools_used to include "log_sip".
+}

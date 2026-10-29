@@ -1,0 +1,31 @@
+meta {
+  name: 28 - Chat - Portfolio (live price)
+  type: http
+  seq: 38
+}
+
+post {
+  url: http://localhost:8000/chat
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "user_id": "u_demo",
+    "message": "how is my investment portfolio doing right now?",
+    "history": []
+  }
+}
+
+docs {
+  Exercises: invest-server -> get_portfolio, which pulls LIVE prices from
+  Yahoo Finance (yfinance) and computes real-time P&L.
+  Expect tools_used to include "get_portfolio" (may also call get_live_price).
+  NOTE: needs outbound internet from the container; if Yahoo is unreachable
+  it degrades gracefully (invested value shown, live value may be null).
+}

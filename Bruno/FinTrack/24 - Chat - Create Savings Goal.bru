@@ -1,0 +1,28 @@
+meta {
+  name: 24 - Chat - Create Savings Goal
+  type: http
+  seq: 34
+}
+
+post {
+  url: http://localhost:8000/chat
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "user_id": "u_demo",
+    "message": "I want to save 50000 for a MacBook by December 2025",
+    "history": []
+  }
+}
+
+docs {
+  Exercises: goals-server -> create_goal (savings type, target + deadline).
+  Expect tools_used to include "create_goal".
+}
