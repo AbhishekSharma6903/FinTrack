@@ -37,7 +37,7 @@ class Holding(Base):
     user_id        = Column(String(100), nullable=False, index=True)
     symbol         = Column(String(20),  nullable=False)   # e.g. "RELIANCE.NS"
     name           = Column(String(200), nullable=False)   # e.g. "Reliance Industries"
-    asset_type     = Column(SAEnum(AssetType, native_enum=False, length=20), nullable=False)
+    asset_type     = Column(SAEnum(AssetType, native_enum=False, length=20, values_callable=lambda x: [e.value for e in x]), nullable=False)
     quantity       = Column(Numeric(18, 6), nullable=False)  # 6 decimals for MF units
     avg_buy_price  = Column(Numeric(12, 2), nullable=False)  # weighted average cost
     total_invested = Column(Numeric(14, 2), nullable=False)  # quantity × avg_buy_price

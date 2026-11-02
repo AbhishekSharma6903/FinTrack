@@ -42,7 +42,7 @@ class Budget(Base):
 
     id                  = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id             = Column(String(100), nullable=False, index=True)
-    category            = Column(SAEnum(Category, native_enum=False, length=20), nullable=False)
+    category            = Column(SAEnum(Category, native_enum=False, length=20, values_callable=lambda x: [e.value for e in x]), nullable=False)
     monthly_limit       = Column(Numeric(12, 2), nullable=False)
 
     # When spending reaches this % of the limit, Claude should warn the user.

@@ -40,8 +40,8 @@ class Goal(Base):
     id             = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id        = Column(String(100), nullable=False, index=True)
     title          = Column(String(200), nullable=False)
-    goal_type      = Column(SAEnum(GoalType, native_enum=False, length=20), nullable=False)
-    status         = Column(SAEnum(GoalStatus, native_enum=False, length=20), default=GoalStatus.ACTIVE, nullable=False)
+    goal_type      = Column(SAEnum(GoalType, native_enum=False, length=20, values_callable=lambda x: [e.value for e in x]), nullable=False)
+    status         = Column(SAEnum(GoalStatus, native_enum=False, length=20, values_callable=lambda x: [e.value for e in x]), default=GoalStatus.ACTIVE, nullable=False)
 
     # ── Savings goal fields (nullable for habit goals) ────────────────────────
     target_amount  = Column(Numeric(14, 2), nullable=True)   # e.g. 50000
