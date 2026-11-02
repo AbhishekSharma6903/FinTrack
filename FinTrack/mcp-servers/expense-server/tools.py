@@ -9,8 +9,44 @@ import uuid
 async def log_transaction(data: TransactionCreate, db: AsyncSession) -> dict:
     """
     MCP Tool: log_expense / log_income
-    Saves a transaction and returns context Claude can reason about.
+    Saves a transaction and returns context the LLM can reason about.
+
+    Design note on duplicates:
+      We INTENTIONALLY do not block duplicates at the DB level. False-positive
+      dedup is more annoying than letting an occasional dupe through. Instead
+      we surface a 'recent_similar' field so the assistant can gently ask the
+      user if the repeat was intentional. User can always call delete_transaction
+      to remove any mistake.
     """
+    now = datetime.utcnow()
+
+    # ── Gentle duplicate awareness (NOT blocking) ─────────────────────────────
+    # Find transactions in the last 5 minutes with the same user+type+amount+category.
+    # This informs the LLM — it does NOT prevent the insert.
+    awareness_window = now - timedelta(minutes=5)
+    recent_similar_result = await db.execute(
+        select(Transaction).where(
+            and_(
+                Transaction.user_id        == data.user_id,
+                Transaction.type           == data.type,
+                Transaction.amount         == data.amount,
+                Transaction.category       == data.category,
+                Transaction.transaction_at >= awareness_window,
+            )
+        ).order_by(Transaction.transaction_at.desc()).limit(3)
+    )
+    recent_similar = [
+        {
+            "id":          str(r.id),
+            "amount":      float(r.amount),
+            "description": r.description,
+            "logged_at":   r.transaction_at.isoformat(),
+            "age_seconds": int((now - r.transaction_at).total_seconds()),
+        }
+        for r in recent_similar_result.scalars().all()
+    ]
+
+    # ── Insert the new transaction (always, even if similar ones exist) ──────
     tx = Transaction(
         id             = uuid.uuid4(),
         user_id        = data.user_id,
@@ -21,14 +57,13 @@ async def log_transaction(data: TransactionCreate, db: AsyncSession) -> dict:
         payment_method = data.payment_method,
         merchant       = data.merchant,
         notes          = data.notes,
-        transaction_at = data.transaction_at or datetime.utcnow(),
+        transaction_at = data.transaction_at or now,
     )
     db.add(tx)
     await db.commit()
     await db.refresh(tx)
 
-    # ── Give Claude rich context to reason about ──────────────────────────────
-    now = datetime.utcnow()
+    # ── Give the LLM rich context to reason about ────────────────────────────
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
     # Monthly total for this category
@@ -93,7 +128,11 @@ async def log_transaction(data: TransactionCreate, db: AsyncSession) -> dict:
             "projected_month_spend":     round(projected_spend, 2),
             "savings_so_far":            round(month_income - month_total_spend, 2),
         },
-        "message": f"Transaction of ₹{data.amount} logged under {data.category.value}."
+        # Non-blocking duplicate awareness: list of recent transactions matching
+        # this one's user+type+amount+category in the last 5 minutes.
+        # Empty list = no concerns. Non-empty = assistant should gently ask the user.
+        "recent_similar": recent_similar,
+        "message": f"Transaction of ₹{data.amount} logged under {data.category.value}.",
     }
 
 
@@ -211,3 +250,64 @@ async def get_monthly_summary(user_id: str, db: AsyncSession) -> dict:
         "top_category":        max(expenses_by_category, key=expenses_by_category.get)
                                if expenses_by_category else None,
     }
+
+
+async def delete_transaction(transaction_id: str, user_id: str, db: AsyncSession) -> dict:
+    """
+    MCP Tool: delete_transaction
+    Permanently removes a single transaction by ID.
+
+    Safety: requires user_id — a transaction can only be deleted by the user
+    who owns it. If the transaction doesn't exist or belongs to someone else,
+    we return success=False so the assistant can tell the user it couldn't
+    find the transaction (without leaking info about other users' data).
+    """
+    try:
+        tx_uuid = uuid.UUID(transaction_id)
+    except (ValueError, TypeError):
+        return {
+            "success": False,
+            "message": f"Invalid transaction_id format: '{transaction_id}' is not a valid UUID.",
+        }
+
+    result = await db.execute(
+        select(Transaction).where(
+            and_(
+                Transaction.id      == tx_uuid,
+                Transaction.user_id == user_id,
+            )
+        )
+    )
+    tx = result.scalar_one_or_none()
+
+    if tx is None:
+        return {
+            "success": False,
+            "transaction_id": transaction_id,
+            "message": "No transaction found with that ID for this user. It may have already been deleted.",
+        }
+
+    # Snapshot the fields BEFORE deletion so we can echo them back in the response.
+    deleted_snapshot = {
+        "transaction_id": str(tx.id),
+        "amount":         float(tx.amount),
+        "category":       tx.category.value,
+        "type":           tx.type.value,
+        "description":    tx.description,
+        "merchant":       tx.merchant,
+        "transaction_at": tx.transaction_at.isoformat(),
+    }
+
+    await db.delete(tx)
+    await db.commit()
+
+    return {
+        "success": True,
+        "deleted": deleted_snapshot,
+        "message": (
+            f"Deleted {tx.type.value} of ₹{tx.amount} ({tx.category.value}"
+            + (f" — {tx.description}" if tx.description else "")
+            + ")."
+        ),
+    }
+
