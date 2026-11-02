@@ -40,7 +40,7 @@ Behind that one reply, 3 tools across 2 microservices fired automatically.
 
 ```
                        ┌────────────────────────┐
-   You (chat client) ─► │   ai-gateway  :8000    │ ─► Groq LLM (openai/gpt-oss-20b)
+   You (chat client) ─►│   ai-gateway  :8000    │ ─► Groq LLM (openai/gpt-oss-20b)
                        │   agentic tool loop    │     [or Ollama, Gemini, ...]
                        └──┬───┬───┬───┬───┬─────┘
                           │   │   │   │   │
