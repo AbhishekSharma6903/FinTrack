@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from contextlib import asynccontextmanager
 from database import init_db, get_db
 from models import TransactionCreate
-from tools import log_transaction, get_expenses, get_monthly_summary
+from tools import log_transaction, get_expenses, get_monthly_summary, delete_transaction
 
 
 @asynccontextmanager
@@ -121,6 +121,25 @@ async def list_tools():
                     },
                     "required": ["user_id"]
                 }
+            },
+            {
+                "name": "delete_transaction",
+                "description": (
+                    "Permanently remove a single transaction (expense or income) by its ID. "
+                    "Use this when the user says things like 'delete that', 'remove the last one', "
+                    "'that was a mistake', 'I didn't actually spend that', or similar. "
+                    "If you don't already have the transaction_id, FIRST call get_expenses to list "
+                    "recent transactions, pick the one the user is referring to by context "
+                    "(amount, description, time), then call delete_transaction with its id."
+                ),
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "user_id":        {"type": "string", "description": "User's unique ID"},
+                        "transaction_id": {"type": "string", "description": "UUID of the transaction to delete"},
+                    },
+                    "required": ["user_id", "transaction_id"]
+                }
             }
         ]
     }
@@ -168,6 +187,13 @@ async def execute_tool(payload: dict, db: AsyncSession = Depends(get_db)):
 
     elif tool_name == "get_monthly_summary":
         return await get_monthly_summary(args["user_id"], db)
+
+    elif tool_name == "delete_transaction":
+        return await delete_transaction(
+            transaction_id = args["transaction_id"],
+            user_id        = args["user_id"],
+            db             = db,
+        )
 
     else:
         raise HTTPException(status_code=404, detail=f"Tool '{tool_name}' not found")
