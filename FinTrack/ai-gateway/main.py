@@ -6,6 +6,7 @@ from openai import OpenAI, APIStatusError
 import json
 import os
 from mcp_client import MCPClient
+import memory
 
 # ── Provider config from .env ──────────────────────────────────────────────────
 # Switch providers by changing these three env vars — no code changes needed.
@@ -38,8 +39,9 @@ _cached_tools: list[dict] = []
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global _cached_tools
+    await memory.init_memory_db()
     _cached_tools = await mcp.discover_tools()
-    print(f"✅ ai-gateway ready — {len(_cached_tools)} tools cached | model: {AI_MODEL}")
+    print(f"✅ ai-gateway ready — {len(_cached_tools)} tools cached | model: {AI_MODEL} | memory: on")
     yield
 
 
@@ -97,6 +99,11 @@ TOOL USAGE RULES — follow these exactly:
    "I want to cut down on Y", "I'm saving for Z"), immediately call create_goal.
    Do not ask clarifying questions first — create the goal with reasonable defaults.
 
+5. Memory: You have access to the user's prior conversation (last ~20 messages are
+   loaded automatically). Use it to follow up naturally ("and the uber too" refers
+   to the previous expense they were logging), remember commitments ("you said last
+   week you'd cut back on food"), and avoid re-asking info already discussed.
+
 Keep responses concise. No bullet-point overload. Talk like a knowledgeable friend,
 not a financial textbook."""
 
@@ -144,16 +151,27 @@ async def chat(req: ChatRequest):
     tools_used  = []
     raw_results = []
 
-    # Build message list: system prompt first, then history, then current message.
-    # OpenAI's message format: [{"role": "system"|"user"|"assistant"|"tool", "content": "..."}]
+    # Build message list: system prompt + prior conversation + new user message.
+    # Memory loading: if the client sent an explicit history, trust it (stateless mode).
+    # Otherwise auto-load the last 20 messages from Postgres (stateful mode).
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
 
-    for msg in req.history:
-        if isinstance(msg.get("content"), str):
-            role = "assistant" if msg["role"] == "assistant" else "user"
-            messages.append({"role": role, "content": msg["content"]})
+    if req.history:
+        # Caller supplied history — use it verbatim (back-compat / testing mode)
+        for msg in req.history:
+            if isinstance(msg.get("content"), str):
+                role = "assistant" if msg["role"] == "assistant" else "user"
+                messages.append({"role": role, "content": msg["content"]})
+    else:
+        # Auto-load from DB (conversational mode)
+        past = await memory.load_history(req.user_id, limit=20)
+        messages.extend(past)
+        print(f"🧠 Loaded {len(past)} prior messages for user {req.user_id}")
 
-    messages.append({"role": "user", "content": req.message})
+    # Add the current user message AND persist it to memory
+    user_msg = {"role": "user", "content": req.message}
+    messages.append(user_msg)
+    await memory.save_message(req.user_id, user_msg)
 
     # ── Agentic tool loop ──────────────────────────────────────────────────────
     # The model may call multiple tools before giving a final text reply.
@@ -183,15 +201,26 @@ async def chat(req: ChatRequest):
 
         # "stop" means the model produced a final text reply — return it
         if finish == "stop" or not choice.message.tool_calls:
+            final_text = choice.message.content or "I processed your request."
+            # Persist the assistant's final reply to memory
+            await memory.save_message(req.user_id, {
+                "role":    "assistant",
+                "content": final_text,
+            })
             return ChatResponse(
-                reply       = choice.message.content or "I processed your request.",
+                reply       = final_text,
                 tools_used  = tools_used,
                 raw_results = raw_results,
             )
 
         # "tool_calls" means the model wants to call one or more tools
-        # Step 1: add the assistant's tool-call message to history
+        # Step 1: add the assistant's tool-call message to history AND persist it
         messages.append(choice.message)   # this is an assistant message with tool_calls attached
+        await memory.save_message(req.user_id, {
+            "role":       "assistant",
+            "content":    choice.message.content,       # usually None when tool_calls present
+            "tool_calls": choice.message.tool_calls,    # SDK objects — memory.py normalizes to JSON
+        })
 
         # Step 2: execute each tool and collect results
         for tc in choice.message.tool_calls:
@@ -207,16 +236,45 @@ async def chat(req: ChatRequest):
             tools_used.append(tool_name)
             raw_results.append(result)
 
-            # Step 3: append each tool result as a "tool" role message
-            # tool_call_id links this result back to the specific tool call above
-            messages.append({
+            # Step 3: append each tool result as a "tool" role message AND persist it
+            tool_msg = {
                 "role":         "tool",
                 "tool_call_id": tc.id,
                 "content":      json.dumps(result),
-            })
+            }
+            messages.append(tool_msg)
+            await memory.save_message(req.user_id, tool_msg)
 
         # Loop back — model will now reason about the tool results and either
         # call more tools or produce a final text reply
+
+
+@app.get("/conversations/{user_id}")
+async def get_conversations(user_id: str, limit: int = 500):
+    """
+    Return the full chat history for a user, ordered chronologically.
+    Response shape is intended for UI consumption (has IDs + timestamps).
+    """
+    history = await memory.get_full_history(user_id, limit=limit)
+    return {
+        "user_id":       user_id,
+        "message_count": len(history),
+        "messages":      history,
+    }
+
+
+@app.delete("/conversations/{user_id}")
+async def delete_conversations(user_id: str):
+    """
+    Wipe all stored conversation history for a user — "start fresh" button.
+    Does NOT touch transactions / budgets / goals, only the chat log.
+    """
+    deleted = await memory.clear_history(user_id)
+    return {
+        "user_id": user_id,
+        "deleted": deleted,
+        "message": f"Cleared {deleted} message(s) from conversation history.",
+    }
 
 
 @app.get("/health")
@@ -231,4 +289,5 @@ async def health():
         "tools":       [t["name"] for t in _cached_tools],
         "model":       AI_MODEL,
         "provider":    AI_BASE_URL,
+        "memory":      "enabled",
     }
