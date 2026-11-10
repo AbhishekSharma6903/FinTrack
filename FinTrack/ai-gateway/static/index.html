@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>FinTrack — your AI money assistant</title>
+<style>
+  :root {
+    --bg:        #0b1020;
+    --panel:    #141a2d;
+    --panel-2:  #1b2340;
+    --text:     #e7ebf5;
+    --muted:    #8c93b0;
+    --accent:   #7c9cff;
+    --accent-2: #4ad6b4;
+    --user:     #2a3568;
+    --ai:       #1a2342;
+    --tool:     #223058;
+    --error:    #ef4444;
+    --radius:   14px;
+    --shadow:   0 10px 25px rgba(0,0,0,.35);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body {
+    background: linear-gradient(180deg, #0a0f1f 0%, #0d132b 100%);
+    color: var(--text);
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif;
+    display: flex; flex-direction: column; height: 100vh;
+  }
+  header {
+    padding: 14px 20px; background: var(--panel);
+    border-bottom: 1px solid #202846;
+    display: flex; align-items: center; gap: 12px;
+  }
+  header .logo {
+    font-size: 22px; font-weight: 700; letter-spacing: .2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  header .status {
+    margin-left: auto; display: flex; align-items: center; gap: 10px;
+    font-size: 12px; color: var(--muted);
+  }
+  header .dot { width: 8px; height: 8px; border-radius: 50%; background: #4ad6b4; }
+  header .user-pill {
+    padding: 4px 10px; background: var(--panel-2); border-radius: 999px;
+    font-size: 12px; color: var(--muted);
+  }
+  header button {
+    background: transparent; color: var(--muted); border: 1px solid #2b3561;
+    padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 12px;
+    transition: all .15s ease;
+  }
+  header button:hover { color: #fff; border-color: var(--accent); }
+
+  main {
+    flex: 1; overflow-y: auto; padding: 20px;
+    max-width: 820px; margin: 0 auto; width: 100%;
+  }
+  .msg { margin: 10px 0; display: flex; }
+  .msg.user { justify-content: flex-end; }
+  .bubble {
+    max-width: 78%; padding: 10px 14px; border-radius: var(--radius);
+    box-shadow: var(--shadow); white-space: pre-wrap; word-wrap: break-word;
+  }
+  .msg.user .bubble { background: var(--user); border-bottom-right-radius: 4px; }
+  .msg.ai   .bubble { background: var(--ai);   border-bottom-left-radius:  4px; }
+  .msg.error .bubble { background: #3a1620; border: 1px solid var(--error); color: #ffd4d4; }
+  .tool-tags {
+    margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px;
+    font-size: 11px; color: var(--muted);
+  }
+  .tool-tag {
+    padding: 3px 8px; background: var(--tool); border-radius: 999px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .thinking { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-style: italic; }
+  .thinking .dots span {
+    display: inline-block; width: 4px; height: 4px; margin: 0 1px; border-radius: 50%;
+    background: var(--muted); animation: blink 1.3s infinite;
+  }
+  .thinking .dots span:nth-child(2) { animation-delay: .2s; }
+  .thinking .dots span:nth-child(3) { animation-delay: .4s; }
+  @keyframes blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+  .empty { color: var(--muted); text-align: center; margin-top: 20vh; font-size: 14px; }
+  .empty h2 { color: var(--text); font-weight: 600; margin-bottom: 6px; }
+  .empty .hints { display: flex; flex-direction: column; gap: 6px; margin-top: 18px; }
+  .empty .hint {
+    background: var(--panel); padding: 10px 14px; border-radius: 10px;
+    cursor: pointer; transition: border-color .15s ease; border: 1px solid transparent;
+  }
+  .empty .hint:hover { border-color: var(--accent); }
+  footer { background: var(--panel); border-top: 1px solid #202846; padding: 14px 20px; }
+  .input-row { max-width: 820px; margin: 0 auto; display: flex; gap: 10px; align-items: flex-end; }
+  textarea {
+    flex: 1; resize: none; min-height: 44px; max-height: 160px;
+    background: var(--panel-2); color: var(--text); border: 1px solid #2b3561;
+    border-radius: 12px; padding: 11px 14px; font: inherit; outline: none;
+    transition: border-color .15s ease;
+  }
+  textarea:focus { border-color: var(--accent); }
+  button.send {
+    background: var(--accent); color: #0b1020; border: 0;
+    padding: 11px 20px; border-radius: 12px; cursor: pointer; font-weight: 600;
+    transition: filter .15s ease; height: 44px;
+  }
+  button.send:hover:not(:disabled) { filter: brightness(1.1); }
+  button.send:disabled { background: #353e65; color: #666c88; cursor: not-allowed; }
+  .footnote { max-width: 820px; margin: 8px auto 0; font-size: 11px; color: var(--muted); text-align: center; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">💰 FinTrack</div>
+  <div class="status"><span class="dot"></span><span id="status-text">ready</span></div>
+  <div class="user-pill">user: <span id="user-id">abhishek</span></div>
+  <button id="reset-btn" title="Clear conversation history">🗑 Reset</button>
+</header>
+
+<main id="chat">
+  <div class="empty" id="empty">
+    <h2>Hey Abhishek 👋</h2>
+    <p>Tell me what you spent, your income, budgets, or goals. I'll remember.</p>
+    <div class="hints">
+      <div class="hint" data-prefill="I spent 300 on auto to office">💸 Log an expense — "I spent 300 on auto to office"</div>
+      <div class="hint" data-prefill="Set my food budget to 6000 per month">🎯 Set a budget — "Set my food budget to 6000"</div>
+      <div class="hint" data-prefill="How much did I spend this month?">📊 Ask for a summary — "How much did I spend this month?"</div>
+      <div class="hint" data-prefill="I want to save 50000 for a Macbook by March">🏆 Create a goal — "Save 50000 for a Macbook by March"</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="input-row">
+    <textarea id="input" placeholder="Type a message… (Enter to send, Shift+Enter for new line)" rows="1"></textarea>
+    <button class="send" id="send">Send ▸</button>
+  </div>
+  <div class="footnote">Chat history persists across sessions. Reset clears it.</div>
+</footer>
+
+
+<script>
+const USER_ID = "abhishek";
+const API_BASE = "";  // same origin — gateway serves this HTML
+
+const $chat   = document.getElementById("chat");
+const $empty  = document.getElementById("empty");
+const $input  = document.getElementById("input");
+const $send   = document.getElementById("send");
+const $reset  = document.getElementById("reset-btn");
+const $status = document.getElementById("status-text");
+
+// Auto-grow textarea height as user types
+$input.addEventListener("input", () => {
+  $input.style.height = "auto";
+  $input.style.height = Math.min($input.scrollHeight, 160) + "px";
+});
+
+// Enter sends; Shift+Enter inserts newline
+$input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+});
+
+// Prefill hints when clicked
+document.querySelectorAll(".hint").forEach(el => {
+  el.addEventListener("click", () => {
+    $input.value = el.dataset.prefill;
+    $input.focus();
+    $input.dispatchEvent(new Event("input"));
+  });
+});
+
+$send.addEventListener("click", sendMessage);
+$reset.addEventListener("click", resetChat);
+
+function escapeHtml(s) {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+function hideEmpty() { if ($empty) { $empty.style.display = "none"; } }
+
+function addMessage(role, text, toolsUsed) {
+  hideEmpty();
+  const wrap = document.createElement("div");
+  wrap.className = "msg " + role;
+  const bubble = document.createElement("div");
+  bubble.className = "bubble";
+  bubble.innerHTML = escapeHtml(text).replace(/\n/g, "<br>");
+
+  if (toolsUsed && toolsUsed.length) {
+    const tags = document.createElement("div");
+    tags.className = "tool-tags";
+    toolsUsed.forEach(t => {
+      const tag = document.createElement("span");
+      tag.className = "tool-tag";
+      tag.textContent = "🔧 " + t;
+      tags.appendChild(tag);
+    });
+    bubble.appendChild(tags);
+  }
+  wrap.appendChild(bubble);
+  $chat.appendChild(wrap);
+  $chat.scrollTop = $chat.scrollHeight;
+  return wrap;
+}
+
+function addThinking() {
+  hideEmpty();
+  const wrap = document.createElement("div");
+  wrap.className = "msg ai";
+  wrap.innerHTML = `<div class="bubble"><div class="thinking">thinking <span class="dots"><span></span><span></span><span></span></span></div></div>`;
+  $chat.appendChild(wrap);
+  $chat.scrollTop = $chat.scrollHeight;
+  return wrap;
+}
+
+async function sendMessage() {
+  const text = $input.value.trim();
+  if (!text) return;
+
+  addMessage("user", text);
+  $input.value = "";
+  $input.style.height = "auto";
+  $input.disabled = true; $send.disabled = true;
+  $status.textContent = "thinking…";
+  const thinkingEl = addThinking();
+
+  try {
+    const res = await fetch(API_BASE + "/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: USER_ID, message: text, history: [] }),
+    });
+
+    thinkingEl.remove();
+
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}));
+      const detail = errBody.detail || `HTTP ${res.status}`;
+      const errMsg = addMessage("ai", "⚠️ " + detail);
+      errMsg.classList.remove("ai"); errMsg.classList.add("error");
+      $status.textContent = "error";
+      return;
+    }
+
+    const data = await res.json();
+    addMessage("ai", data.reply, data.tools_used);
+    $status.textContent = "ready";
+
+  } catch (err) {
+    thinkingEl.remove();
+    const errMsg = addMessage("ai", "⚠️ Network error: " + err.message);
+    errMsg.classList.remove("ai"); errMsg.classList.add("error");
+    $status.textContent = "error";
+  } finally {
+    $input.disabled = false; $send.disabled = false; $input.focus();
+  }
+}
+
+async function resetChat() {
+  if (!confirm("Clear your entire conversation history?\n\n(Transactions and budgets stay — only chat memory is wiped.)")) return;
+  try {
+    const res = await fetch(API_BASE + "/conversations/" + USER_ID, { method: "DELETE" });
+    if (!res.ok) throw new Error("Reset failed");
+    $chat.innerHTML = "";
+    if ($empty) { $chat.appendChild($empty); $empty.style.display = ""; }
+    $status.textContent = "ready";
+  } catch (err) {
+    alert("Reset failed: " + err.message);
+  }
+}
+
+async function loadHistory() {
+  try {
+    const res = await fetch(API_BASE + "/conversations/" + USER_ID);
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.messages || data.messages.length === 0) return;
+
+    // Render chronologically. Only show user text + final assistant text replies.
+    // Collect tool names from assistant tool-call messages to display as tags
+    // underneath the FOLLOWING final assistant reply.
+    let pendingTools = [];
+    for (const m of data.messages) {
+      if (m.role === "user" && m.content) {
+        addMessage("user", m.content);
+        pendingTools = [];
+      } else if (m.role === "assistant" && m.tool_calls && m.tool_calls.length) {
+        for (const tc of m.tool_calls) {
+          if (tc.function && tc.function.name) pendingTools.push(tc.function.name);
+        }
+      } else if (m.role === "assistant" && m.content) {
+        addMessage("ai", m.content, pendingTools);
+        pendingTools = [];
+      }
+    }
+    $status.textContent = "ready";
+  } catch (e) {
+    console.warn("Could not load history", e);
+  }
+}
+
+// On page load: check backend health, then rehydrate chat from DB
+(async () => {
+  try {
+    const h = await fetch(API_BASE + "/health").then(r => r.json());
+    $status.textContent = `${h.tools_count} tools · ${h.model}`;
+    await loadHistory();
+  } catch {
+    $status.textContent = "offline";
+  }
+})();
+</script>
+</body>
+</html>
+

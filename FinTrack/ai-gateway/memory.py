@@ -74,35 +74,127 @@ async def init_memory_db():
 
 # ── Load / save / clear ────────────────────────────────────────────────────────
 
+# How many extra messages to fetch when looking for `limit` COMPLETE turns.
+# A single user turn can expand into 1 user + N (assistant+tool) pairs + 1 final
+# assistant text. So we fetch 3× the target and then trim down to a sane slice.
+_FETCH_OVERSHOOT = 3
+
+
 async def load_history(user_id: str, limit: int = 20) -> list[dict]:
     """
     Return the last `limit` messages for this user as OpenAI-compatible dicts.
     Ordered oldest→newest so they can be prepended directly to a new chat.
 
-    Why DESC-then-reverse: we want the N most RECENT, but delivered in chronological
-    order to the LLM. Standard pagination trick.
+    Smart boundary handling: naïvely slicing the last N rows can split a tool-
+    chain apart — leaving orphan tool responses or assistant-tool_call messages
+    that have no partner. Models like Groq's gpt-oss-* reject these with
+    cryptic errors ("Tools should have a name!").
+
+    Fix: fetch more than we need, then walk backwards keeping only well-formed
+    segments. We ONLY start the returned history with a 'user' message (never
+    a mid-flight tool_call) to guarantee the LLM sees a valid conversation.
     """
     async with _SessionLocal() as session:
         result = await session.execute(
             select(ConversationMessage)
             .where(ConversationMessage.user_id == user_id)
             .order_by(ConversationMessage.created_at.desc())
-            .limit(limit)
+            .limit(limit * _FETCH_OVERSHOOT)
         )
-        rows = result.scalars().all()
+        rows = list(result.scalars().all())
 
-    # Reverse to chronological order and convert to OpenAI message shape
-    messages = []
-    for row in reversed(rows):
-        msg: dict = {"role": row.role}
-        if row.content is not None:
-            msg["content"] = row.content
-        if row.tool_calls is not None:
-            msg["tool_calls"] = row.tool_calls
-        if row.tool_call_id is not None:
-            msg["tool_call_id"] = row.tool_call_id
-        messages.append(msg)
-    return messages
+    if not rows:
+        return []
+
+    # Convert to chronological order (oldest first)
+    rows.reverse()
+
+    # Walk forward and segment the messages into turns.
+    # A "turn" starts at a user message and ends either at the next user
+    # message (exclusive) or at EOF. Within a turn we keep everything —
+    # assistant tool_calls, tool results, final assistant text.
+    turns: list[list[dict]] = []
+    current: list[dict] = []
+    for row in rows:
+        msg = _row_to_message(row)
+        if msg["role"] == "user":
+            if current:
+                turns.append(current)
+            current = [msg]
+        else:
+            # Skip orphan non-user messages before the first user turn starts
+            if current:
+                current.append(msg)
+    if current:
+        turns.append(current)
+
+    # Drop any turn that's malformed:
+    #   - missing a final assistant text reply (crashed mid-stream)
+    #   - has an assistant tool_call without a matching tool response
+    valid_turns = [t for t in turns if _is_valid_turn(t)]
+
+    # Keep the most-recent turns that fit within `limit` messages total
+    selected: list[dict] = []
+    for turn in reversed(valid_turns):
+        if len(selected) + len(turn) > limit:
+            break
+        selected = turn + selected
+
+    return selected
+
+
+def _row_to_message(row: ConversationMessage) -> dict:
+    """Convert a DB row to the OpenAI message dict shape."""
+    msg: dict = {"role": row.role}
+    if row.content is not None:
+        msg["content"] = row.content
+    if row.tool_calls is not None:
+        msg["tool_calls"] = row.tool_calls
+    if row.tool_call_id is not None:
+        msg["tool_call_id"] = row.tool_call_id
+    return msg
+
+
+def _is_valid_turn(turn: list[dict]) -> bool:
+    """
+    A valid turn:
+      - starts with role='user'
+      - every assistant tool_call message is followed by a tool response for
+        each tool_call_id (within the turn)
+      - ends with an assistant text message (role='assistant' and content)
+    Malformed turns (crashed mid-stream) are dropped so the LLM never sees them.
+    """
+    if not turn or turn[0].get("role") != "user":
+        return False
+
+    # Collect all tool_call_ids the assistant requested across this turn
+    requested_ids: set[str] = set()
+    responded_ids: set[str] = set()
+    for msg in turn:
+        if msg.get("role") == "assistant" and msg.get("tool_calls"):
+            for tc in msg["tool_calls"]:
+                if not isinstance(tc, dict):
+                    return False
+                fn = tc.get("function") or {}
+                if not fn.get("name"):
+                    return False   # "Tools should have a name!" guard
+                if tc.get("id"):
+                    requested_ids.add(tc["id"])
+        elif msg.get("role") == "tool":
+            if msg.get("tool_call_id"):
+                responded_ids.add(msg["tool_call_id"])
+
+    # Every requested tool call must have a matching response
+    if requested_ids != responded_ids:
+        return False
+
+    # Turn must end with an assistant text reply (not a tool_call message)
+    last = turn[-1]
+    if last.get("role") != "assistant" or not last.get("content"):
+        return False
+
+    return True
+
 
 
 async def save_message(user_id: str, message: dict) -> None:

@@ -57,7 +57,6 @@ async def list_tools():
                 "input_schema": {
                     "type": "object",
                     "properties": {
-                        "user_id":        {"type": "string"},
                         "title":          {"type": "string", "description": "Short goal name e.g. 'MacBook Fund'"},
                         "goal_type":      {"type": "string", "enum": ["savings", "habit"]},
                         "target_amount":  {"type": "number",  "description": "Target amount in INR (savings goals only)"},
@@ -69,7 +68,7 @@ async def list_tools():
                         "habit_limit":    {"type": "number", "description": "Monthly spend limit in INR (habit goals only)"},
                         "notes":          {"type": "string"},
                     },
-                    "required": ["user_id", "title", "goal_type"]
+                    "required": ["title", "goal_type"]
                 }
             },
             {
@@ -81,8 +80,8 @@ async def list_tools():
                 ),
                 "input_schema": {
                     "type": "object",
-                    "properties": {"user_id": {"type": "string"}},
-                    "required": ["user_id"]
+                    "properties": {},
+                    "required": []
                 }
             },
             {
@@ -96,12 +95,11 @@ async def list_tools():
                 "input_schema": {
                     "type": "object",
                     "properties": {
-                        "user_id": {"type": "string"},
                         "goal_id": {"type": "string", "description": "UUID of the goal"},
                         "amount":  {"type": "number",  "description": "Amount deposited in INR"},
                         "note":    {"type": "string",  "description": "Optional note about this deposit"},
                     },
-                    "required": ["user_id", "goal_id", "amount"]
+                    "required": ["goal_id", "amount"]
                 }
             },
             {
@@ -114,10 +112,9 @@ async def list_tools():
                 "input_schema": {
                     "type": "object",
                     "properties": {
-                        "user_id": {"type": "string"},
                         "goal_id": {"type": "string"},
                     },
-                    "required": ["user_id", "goal_id"]
+                    "required": ["goal_id"]
                 }
             },
             {
@@ -130,7 +127,6 @@ async def list_tools():
                 "input_schema": {
                     "type": "object",
                     "properties": {
-                        "user_id":       {"type": "string"},
                         "goal_id":       {"type": "string"},
                         "title":         {"type": "string"},
                         "target_amount": {"type": "number"},
@@ -138,7 +134,7 @@ async def list_tools():
                         "habit_limit":   {"type": "number"},
                         "notes":         {"type": "string"},
                     },
-                    "required": ["user_id", "goal_id"]
+                    "required": ["goal_id"]
                 }
             },
             {
@@ -151,10 +147,9 @@ async def list_tools():
                 "input_schema": {
                     "type": "object",
                     "properties": {
-                        "user_id": {"type": "string"},
                         "goal_id": {"type": "string"},
                     },
-                    "required": ["user_id", "goal_id"]
+                    "required": ["goal_id"]
                 }
             },
             {
@@ -168,8 +163,8 @@ async def list_tools():
                 ),
                 "input_schema": {
                     "type": "object",
-                    "properties": {"user_id": {"type": "string"}},
-                    "required": ["user_id"]
+                    "properties": {},
+                    "required": []
                 }
             },
         ]

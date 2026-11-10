@@ -24,3 +24,8 @@ venv/
 # Bruno — only ignore local-only env files, keep the collection itself
 Bruno/**/environments/
 *.bruno.json
+
+# Personal notes / scratch files — never commit these
+FinTrack/Imp commands.md
+*.notes.md
+scratch/

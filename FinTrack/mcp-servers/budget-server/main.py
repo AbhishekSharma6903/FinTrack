@@ -65,7 +65,6 @@ async def list_tools():
                 "input_schema": {
                     "type": "object",
                     "properties": {
-                        "user_id":             {"type": "string",  "description": "User's unique ID"},
                         "category":            {
                             "type": "string",
                             "enum": ["food", "transport", "shopping", "entertainment",
@@ -75,7 +74,7 @@ async def list_tools():
                         "monthly_limit":       {"type": "number",  "description": "Monthly limit in INR"},
                         "alert_threshold_pct": {"type": "integer", "description": "Warn at this % used (default 80)"},
                     },
-                    "required": ["user_id", "category", "monthly_limit"]
+                    "required": ["category", "monthly_limit"]
                 }
             },
             {
@@ -88,14 +87,13 @@ async def list_tools():
                 "input_schema": {
                     "type": "object",
                     "properties": {
-                        "user_id":  {"type": "string"},
                         "category": {
                             "type": "string",
                             "enum": ["food", "transport", "shopping", "entertainment",
                                      "health", "utilities", "emi", "investment", "other"]
                         },
                     },
-                    "required": ["user_id", "category"]
+                    "required": ["category"]
                 }
             },
             {
@@ -108,9 +106,8 @@ async def list_tools():
                 "input_schema": {
                     "type": "object",
                     "properties": {
-                        "user_id": {"type": "string"}
                     },
-                    "required": ["user_id"]
+                    "required": []
                 }
             },
             {
@@ -126,14 +123,13 @@ async def list_tools():
                 "input_schema": {
                     "type": "object",
                     "properties": {
-                        "user_id":  {"type": "string"},
                         "category": {
                             "type": "string",
                             "enum": ["food", "transport", "shopping", "entertainment",
                                      "health", "utilities", "emi", "investment", "other"]
                         },
                     },
-                    "required": ["user_id", "category"]
+                    "required": ["category"]
                 }
             },
             {
@@ -145,7 +141,6 @@ async def list_tools():
                 "input_schema": {
                     "type": "object",
                     "properties": {
-                        "user_id":       {"type": "string"},
                         "category":      {
                             "type": "string",
                             "enum": ["food", "transport", "shopping", "entertainment",
@@ -153,7 +148,7 @@ async def list_tools():
                         },
                         "monthly_limit": {"type": "number", "description": "New monthly limit in INR"},
                     },
-                    "required": ["user_id", "category", "monthly_limit"]
+                    "required": ["category", "monthly_limit"]
                 }
             },
             {
@@ -165,14 +160,13 @@ async def list_tools():
                 "input_schema": {
                     "type": "object",
                     "properties": {
-                        "user_id":  {"type": "string"},
                         "category": {
                             "type": "string",
                             "enum": ["food", "transport", "shopping", "entertainment",
                                      "health", "utilities", "emi", "investment", "other"]
                         },
                     },
-                    "required": ["user_id", "category"]
+                    "required": ["category"]
                 }
             },
             {
@@ -185,9 +179,8 @@ async def list_tools():
                 "input_schema": {
                     "type": "object",
                     "properties": {
-                        "user_id": {"type": "string"}
                     },
-                    "required": ["user_id"]
+                    "required": []
                 }
             },
         ]

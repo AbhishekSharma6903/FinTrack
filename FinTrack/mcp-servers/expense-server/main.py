@@ -51,7 +51,6 @@ async def list_tools():
                 "input_schema": {
                     "type": "object",
                     "properties": {
-                        "user_id":        {"type": "string",  "description": "User's unique ID"},
                         "amount":         {"type": "number",  "description": "Amount spent in INR"},
                         "category":       {
                             "type": "string",
@@ -66,7 +65,7 @@ async def list_tools():
                             "enum": ["upi", "cash", "credit_card", "debit_card", "net_banking", "other"]
                         },
                     },
-                    "required": ["user_id", "amount", "category"]
+                    "required": ["amount", "category"]
                 }
             },
             {
@@ -78,7 +77,6 @@ async def list_tools():
                 "input_schema": {
                     "type": "object",
                     "properties": {
-                        "user_id":     {"type": "string", "description": "User's unique ID"},
                         "amount":      {"type": "number", "description": "Amount received in INR"},
                         "category":    {
                             "type": "string",
@@ -86,7 +84,7 @@ async def list_tools():
                         },
                         "description": {"type": "string", "description": "Source of income"},
                     },
-                    "required": ["user_id", "amount", "category"]
+                    "required": ["amount", "category"]
                 }
             },
             {
@@ -99,12 +97,11 @@ async def list_tools():
                 "input_schema": {
                     "type": "object",
                     "properties": {
-                        "user_id":  {"type": "string"},
                         "category": {"type": "string", "description": "Filter by category (optional)"},
                         "days":     {"type": "integer", "description": "How many days back (default 30)"},
                         "limit":    {"type": "integer", "description": "Max transactions to return"},
                     },
-                    "required": ["user_id"]
+                    "required": []
                 }
             },
             {
@@ -117,9 +114,8 @@ async def list_tools():
                 "input_schema": {
                     "type": "object",
                     "properties": {
-                        "user_id": {"type": "string"}
                     },
-                    "required": ["user_id"]
+                    "required": []
                 }
             },
             {
@@ -135,10 +131,9 @@ async def list_tools():
                 "input_schema": {
                     "type": "object",
                     "properties": {
-                        "user_id":        {"type": "string", "description": "User's unique ID"},
                         "transaction_id": {"type": "string", "description": "UUID of the transaction to delete"},
                     },
-                    "required": ["user_id", "transaction_id"]
+                    "required": ["transaction_id"]
                 }
             }
         ]

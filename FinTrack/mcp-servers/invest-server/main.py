@@ -48,7 +48,6 @@ async def list_tools():
                 "input_schema": {
                     "type": "object",
                     "properties": {
-                        "user_id":       {"type": "string"},
                         "symbol":        {"type": "string", "description": "Yahoo Finance symbol. NSE stocks: append .NS (e.g. RELIANCE.NS). MF ETFs: NIFTYBEES.NS. Crypto: BTC-INR. Gold: GC=F. FD: use a custom label like FD_HDFC."},
                         "name":          {"type": "string", "description": "Human-readable name e.g. 'Reliance Industries'"},
                         "asset_type":    {"type": "string", "enum": ["stock", "mutual_fund", "crypto", "gold", "fd"]},
@@ -56,7 +55,7 @@ async def list_tools():
                         "avg_buy_price": {"type": "number", "description": "Price per unit at time of purchase in INR"},
                         "notes":         {"type": "string", "description": "Optional note"},
                     },
-                    "required": ["user_id", "symbol", "name", "asset_type", "quantity", "avg_buy_price"]
+                    "required": ["symbol", "name", "asset_type", "quantity", "avg_buy_price"]
                 }
             },
             {
@@ -69,9 +68,8 @@ async def list_tools():
                 "input_schema": {
                     "type": "object",
                     "properties": {
-                        "user_id": {"type": "string"}
                     },
-                    "required": ["user_id"]
+                    "required": []
                 }
             },
             {
@@ -99,11 +97,10 @@ async def list_tools():
                 "input_schema": {
                     "type": "object",
                     "properties": {
-                        "user_id": {"type": "string"},
                         "symbol":  {"type": "string", "description": "Fund symbol e.g. NIFTYBEES.NS"},
                         "amount":  {"type": "number", "description": "SIP instalment amount in INR"},
                     },
-                    "required": ["user_id", "symbol", "amount"]
+                    "required": ["symbol", "amount"]
                 }
             },
             {
@@ -115,9 +112,8 @@ async def list_tools():
                 "input_schema": {
                     "type": "object",
                     "properties": {
-                        "user_id": {"type": "string"}
                     },
-                    "required": ["user_id"]
+                    "required": []
                 }
             },
             {
@@ -129,9 +125,8 @@ async def list_tools():
                 "input_schema": {
                     "type": "object",
                     "properties": {
-                        "user_id": {"type": "string"}
                     },
-                    "required": ["user_id"]
+                    "required": []
                 }
             },
         ]

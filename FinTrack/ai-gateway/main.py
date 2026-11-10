@@ -1,5 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from contextlib import asynccontextmanager
 from openai import OpenAI, APIStatusError
@@ -53,6 +55,25 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# ── Static UI ─────────────────────────────────────────────────────────────────
+# Mount the ./static folder (contains index.html) so any additional assets
+# (e.g. favicon, future CSS/JS files) are served too. The root route "/"
+# returns index.html directly — this is the FinTrack web UI.
+
+_STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
+if os.path.isdir(_STATIC_DIR):
+    app.mount("/static", StaticFiles(directory=_STATIC_DIR), name="static")
+
+
+@app.get("/", include_in_schema=False)
+async def root():
+    """Serve the FinTrack web UI."""
+    index_path = os.path.join(_STATIC_DIR, "index.html")
+    if os.path.isfile(index_path):
+        return FileResponse(index_path)
+    raise HTTPException(status_code=404, detail="UI not found")
 
 
 class ChatRequest(BaseModel):

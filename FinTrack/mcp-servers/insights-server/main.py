@@ -46,8 +46,8 @@ async def list_tools():
                 ),
                 "input_schema": {
                     "type": "object",
-                    "properties": {"user_id": {"type": "string"}},
-                    "required": ["user_id"]
+                    "properties": {},
+                    "required": []
                 }
             },
             {
@@ -59,8 +59,8 @@ async def list_tools():
                 ),
                 "input_schema": {
                     "type": "object",
-                    "properties": {"user_id": {"type": "string"}},
-                    "required": ["user_id"]
+                    "properties": {},
+                    "required": []
                 }
             },
             {
@@ -72,8 +72,8 @@ async def list_tools():
                 ),
                 "input_schema": {
                     "type": "object",
-                    "properties": {"user_id": {"type": "string"}},
-                    "required": ["user_id"]
+                    "properties": {},
+                    "required": []
                 }
             },
             {
@@ -84,8 +84,8 @@ async def list_tools():
                 ),
                 "input_schema": {
                     "type": "object",
-                    "properties": {"user_id": {"type": "string"}},
-                    "required": ["user_id"]
+                    "properties": {},
+                    "required": []
                 }
             },
             {
@@ -97,8 +97,8 @@ async def list_tools():
                 ),
                 "input_schema": {
                     "type": "object",
-                    "properties": {"user_id": {"type": "string"}},
-                    "required": ["user_id"]
+                    "properties": {},
+                    "required": []
                 }
             },
         ]
